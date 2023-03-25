@@ -1,8 +1,10 @@
 import React, { FC, useEffect, useRef } from 'react'
+import HTMLReactParser from 'html-react-parser'
 
 export interface ILink {
   text: string
   url: string
+  string?: string
 }
 
 export interface ILinkProps {
@@ -26,7 +28,7 @@ const Link: FC<ILinkProps> = (props) => {
 
   return (
     <a href={link.url} ref={linkRef}>
-      {link.text}
+      {link.string ? HTMLReactParser(link.string) : link.text}
     </a>
   )
 }

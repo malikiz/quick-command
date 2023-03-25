@@ -4,21 +4,17 @@ import Input from './Input/Input'
 import Links from './Links/Links'
 import { ILink } from './Links/Link'
 import $ from 'jquery'
-import stringSimilarity from 'string-similarity'
+import fuzzy from 'fuzzy'
 
-const findLinks = (value: string): ILink[] => {
+const findAllLinks = (): ILink[] => {
   const links: ILink[] = []
-
-  if (!value) {
-    return []
-  }
 
   $('a').each(function() {
     const $link = $(this)
     const text = $link.text()
     const href = $link.attr('href')
 
-    if (stringSimilarity.compareTwoStrings(value, text)  && href && !$link.parents('#quick-command').length) {
+    if (href && !$link.parents('#quick-command').length) {
       links.push({
         url: href,
         text,
@@ -29,56 +25,32 @@ const findLinks = (value: string): ILink[] => {
   return links
 }
 
-const keyboardController = (options: {
-  onOpen: () => void,
-  onClose: () => void
-  onSelect: (key: 'ArrowUp' | 'ArrowDown') => void
-}) => {
-  let keys: string[] = []
-  let lastEntry = 0
-  const seq = 'Shift,Shift'
-  let isCtrlPressed = false
+const filterAllLinks = (links: ILink[], value: string): ILink[] => {
+  if (!value) {
+    return []
+  }
 
-
-  $(document).on('keydown', function (e) {
-    if (e.key === 'Control') {
-      isCtrlPressed = true
+  return fuzzy.filter(value, links, {
+    pre: '<b>',
+    post: '</b>',
+    extract(input: ILink): string {
+      return input.text
     }
-
-    if (e.key === 'Escape') {
-      options.onClose()
+  }).map(item => {
+    return {
+      string: item.string,
+      ...item.original
     }
-  })
-  $(document).on('keyup', function(event) {
-    if (event.key === 'Control') {
-      isCtrlPressed = false
-
-      return
-    }
-
-    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-      event.preventDefault()
-      options.onSelect(event.key)
-    }
-
-    keys.push(event.key)
-
-    if ( keys.toString().indexOf(seq) !== -1 && isCtrlPressed) {
-      if (event.timeStamp - lastEntry <= 300) {
-        options.onOpen()
-        keys = []
-      }
-    }
-    // Update time of last keydown
-    lastEntry = event.timeStamp
   })
 }
 
 const QuickCommand = () => {
   const [isVisible, setVisible] = useState(false)
   const [inputValue, setInputValue] = useState('')
-  const [links, setLinks] = useState<ILink[]>([])
+  const [allLinks, setAllLinks] = useState<ILink[]>([])
   const [focusedLinkIndex, setFocusedLinkIndex] = useState<number | null>(null)
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false)
+  const filteredLinks = filterAllLinks(allLinks, inputValue)
 
   const handleSetFocusedLinkIndex = (incrementValue: number) => {
     const value = (focusedLinkIndex ?? -1) + incrementValue
@@ -86,39 +58,70 @@ const QuickCommand = () => {
     if (value < 0) {
       setFocusedLinkIndex(null)
     } else {
-      setFocusedLinkIndex(Math.max(0, Math.min(value, links.length - 1)))
+      const newValue = Math.max(0, Math.min(value, filteredLinks.length - 1))
+      setFocusedLinkIndex(newValue)
     }
   }
 
   useEffect(() => {
-    keyboardController({
-      onOpen: () => {
-        setFocusedLinkIndex(null)
-        setVisible(true)
-      },
-      onClose: () => {
-        setFocusedLinkIndex(null)
-        setVisible(false)
-      },
-      onSelect: (key) => {
-        if (key === 'ArrowUp') {
-          handleSetFocusedLinkIndex(-1)
-        }
-
-        if (key === 'ArrowDown') {
-          handleSetFocusedLinkIndex(+1)
-        }
-      }
-    })
-
-    return () => {
-      $(document).off('keyup, keyup')
-    }
-  })
+    setAllLinks(findAllLinks())
+  }, [])
 
   useEffect(() => {
-    setLinks(findLinks(inputValue))
-  }, [inputValue])
+    let keys: string[] = []
+    const seq = 'Shift,Shift'
+    let lastEntry = 0
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Control') {
+        setIsCtrlPressed(true)
+      }
+
+      if (event.key === 'Escape') {
+        setVisible(false)
+      }
+
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault()
+
+        if (event.key === 'ArrowUp') {
+          handleSetFocusedLinkIndex(-1)
+        } else {
+          handleSetFocusedLinkIndex(+1)
+        }
+      } else {
+        setFocusedLinkIndex(null)
+      }
+    }
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Control') {
+        setIsCtrlPressed(false)
+
+        return
+      }
+
+      keys.push(event.key)
+
+      if (keys.toString().indexOf(seq) !== -1 && isCtrlPressed) {
+        if (event.timeStamp - lastEntry <= 300) {
+          setVisible(true)
+          keys = []
+        }
+      }
+      // Update time of last keydown
+      lastEntry = event.timeStamp
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyDown)
+    }
+  }, [isCtrlPressed, filteredLinks])
+
 
   if (!isVisible) {
     return null
@@ -128,12 +131,13 @@ const QuickCommand = () => {
     setFocusedLinkIndex(null)
   }
 
+
   return (
     <div className={styles.quickCommand} id="quick-command">
-      <Input onChange={setInputValue} isFocused={focusedLinkIndex === null} onFocus={handleFocus} />
-      {links.length > 0 && (
+      <Input onChange={setInputValue} isFocused={focusedLinkIndex === null} onFocus={handleFocus} defaultValue={inputValue} />
+      {filteredLinks.length > 0 && (
         <div className={styles.result}>
-          <Links links={links} focusedLinkIndex={focusedLinkIndex} />
+          <Links links={filteredLinks} focusedLinkIndex={focusedLinkIndex} />
         </div>
       )}
     </div>

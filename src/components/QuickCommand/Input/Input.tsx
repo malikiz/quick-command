@@ -5,9 +5,10 @@ interface IInputProps {
   onChange: (value: string) => void
   isFocused: boolean
   onFocus: () => void
+  defaultValue?: string
 }
 
-const Input: FC<IInputProps> = ({ onChange, isFocused, onFocus }) => {
+const Input: FC<IInputProps> = ({ onChange, isFocused, onFocus, defaultValue }) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -20,7 +21,7 @@ const Input: FC<IInputProps> = ({ onChange, isFocused, onFocus }) => {
     <div className={styles.input}>
       <input type="text" onChange={(event) => {
         onChange(event.target.value)
-      }} ref={inputRef} onFocus={onFocus} />
+      }} ref={inputRef} onFocus={onFocus} defaultValue={defaultValue} />
     </div>
   )
 }
