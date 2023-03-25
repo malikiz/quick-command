@@ -78,6 +78,9 @@
     "import/first": "off",
     "no-extend-native": "off",
     "curly": "warn",
+    "no-unused-vars": [
+      "error"
+    ],
     "react/react-in-jsx-scope": "off",
     "react/jsx-tag-spacing": [
       "error"

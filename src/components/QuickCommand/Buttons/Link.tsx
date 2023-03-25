@@ -1,37 +1,31 @@
-import React, { FC, useEffect, useRef } from 'react'
+import React, { FC, RefObject } from 'react'
 import HTMLReactParser from 'html-react-parser'
+import styles from './Buttons.module.scss'
+import classNames from 'classnames'
+import { IButton } from './Button'
 
-export interface ILink {
-  element: Element
-  text: string
-  parentText?: string
+export interface ILink extends IButton {
   url: string
-  string?: string
 }
 
 export interface ILinkProps {
   link: ILink,
   isFocused: boolean
+  innerRef?: RefObject<HTMLAnchorElement>
 }
 
 const Link: FC<ILinkProps> = (props) => {
   const {
     link,
+    innerRef,
     isFocused,
   } = props
-
-  const linkRef = useRef<HTMLAnchorElement>(null)
-
-  useEffect(() => {
-    if (linkRef.current && isFocused) {
-      linkRef.current.focus()
-    }
-  }, [isFocused])
 
   return (
     <a
       href={link.url}
-      ref={linkRef}
+      ref={innerRef}
+      className={classNames({ [styles.focused]: isFocused })}
     >
       {link.string ? HTMLReactParser(link.string) : link.text}
     </a>

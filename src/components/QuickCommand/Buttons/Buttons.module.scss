@@ -10,7 +10,7 @@
     text-decoration: none;
     cursor: pointer;
 
-    &:focus,
+    &.focused,
     &:hover {
       background-color: rgba(0, 178, 255, 0.5);
       color: #fff;

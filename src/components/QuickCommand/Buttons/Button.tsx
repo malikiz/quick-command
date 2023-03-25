@@ -1,31 +1,28 @@
-import React, { FC, useEffect, useRef } from 'react'
+import React, { FC, RefObject } from 'react'
 import HTMLReactParser from 'html-react-parser'
+import classNames from 'classnames'
+import styles from './Buttons.module.scss'
 
 export interface IButton {
   element: HTMLElement
   text: string
   parentText?: string
   string?: string
+  url?: string
 }
 
 export interface IButtonProps {
   button: IButton,
   isFocused: boolean
+  innerRef?: RefObject<HTMLButtonElement>
 }
 
 const Button: FC<IButtonProps> = (props) => {
   const {
     button,
+    innerRef,
     isFocused,
   } = props
-
-  const buttonRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    if (buttonRef.current && isFocused) {
-      buttonRef.current.focus()
-    }
-  }, [isFocused])
 
   const onClick = () => {
     button.element.click()
@@ -33,8 +30,9 @@ const Button: FC<IButtonProps> = (props) => {
 
   return (
     <button
-      ref={buttonRef}
+      ref={innerRef}
       onClick={onClick}
+      className={classNames({ [styles.focused]: isFocused })}
     >
       {button.string ? HTMLReactParser(button.string) : button.text}
     </button>

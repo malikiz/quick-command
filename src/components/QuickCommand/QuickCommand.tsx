@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { ChangeEvent, KeyboardEventHandler, useEffect, useRef, useState } from 'react'
 import styles from './QuickCommand.module.scss'
 import Input from './Input/Input'
 import { ILink } from './Buttons/Link'
@@ -7,7 +7,8 @@ import fuzzy from 'fuzzy'
 import { IButton } from './Buttons/Button'
 import Buttons from './Buttons/Buttons'
 
-let oldFocusedButton: ILink | IButton
+let isCtrlPressed = false
+let keys: string[] = []
 
 const sliceText = (text: string, maxLength: number): string => {
   return text.length > maxLength ? text.slice(0, maxLength) + '...' : text
@@ -57,7 +58,8 @@ const findButtons = (): IButton[] => {
 
     if (!$button.parents('#quick-command').length) {
       buttons.push({
-        element: $button[0],
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        element: $button[0]!,
         text,
         parentText,
       })
@@ -67,7 +69,7 @@ const findButtons = (): IButton[] => {
   return buttons
 }
 
-const filterAllButtons = <T extends ILink | IButton>(list: T[], value: string): T[] => {
+const filterAllButtons = <T extends IButton>(list: T[], value: string): T[] => {
   const filteredLinks = list.filter(item => {
     if ((item as ILink).url) {
       const link = item as ILink
@@ -89,10 +91,9 @@ const filterAllButtons = <T extends ILink | IButton>(list: T[], value: string): 
 
     return true
   }).map(item => {
-    return {
-      ...item,
-      text: (item.text || item.parentText)?.trim() || (item as ILink).url || '',
-    }
+    item.text = (item.text || item.parentText)?.trim() || (item as ILink).url || ''
+
+    return item
   })
 
   return fuzzy.filter(value, filteredLinks, {
@@ -102,10 +103,9 @@ const filterAllButtons = <T extends ILink | IButton>(list: T[], value: string): 
       return input.text
     }
   }).map(item => {
-    return {
-      string: item.string,
-      ...item.original
-    }
+    item.original.string = item.string
+
+    return item.original
   })
 }
 
@@ -113,18 +113,19 @@ const QuickCommand = () => {
   const [isVisible, setVisible] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [allButtons, setAllButtons] = useState<IButton[]>([])
-  const [allLinks, setAllLinks] = useState<ILink[]>([])
-  const [focusedButtonIndex, setFocusedButtonIndex] = useState<number | null>(null)
+  const [allLinks, setAllLinks] = useState<IButton[]>([])
+  const [focusedButtonIndex, setFocusedButtonIndex] = useState<number>(0)
   const [observerTick, setObserverTick] = useState(0)
   const filteredLinks = filterAllButtons(allLinks, inputValue)
   const filteredButtons = filterAllButtons(allButtons, inputValue)
-  const commonFilteredButtons = [...filteredLinks, ...filteredButtons]
+  const commonFilteredButtons = filteredLinks.concat(filteredButtons)
+  const [focusedButton, setFocusedButton] = useState<IButton | null>(null)
 
   const handleSetFocusedLinkIndex = (incrementValue: number) => {
     const value = (focusedButtonIndex ?? -1) + incrementValue
 
     if (value < 0) {
-      setFocusedButtonIndex(null)
+      setFocusedButtonIndex(0)
     } else {
       const newValue = Math.max(0, Math.min(value, commonFilteredButtons.length - 1))
       setFocusedButtonIndex(newValue)
@@ -155,8 +156,6 @@ const QuickCommand = () => {
   }, [observerTick])
 
   useEffect(() => {
-    let isCtrlPressed = false
-    let keys: string[] = []
     const seq = 'Shift,Shift'
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -172,18 +171,6 @@ const QuickCommand = () => {
         setVisible(false)
         isCtrlPressed = false
         keys = []
-      }
-
-      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-        event.preventDefault()
-
-        if (event.key === 'ArrowUp') {
-          handleSetFocusedLinkIndex(-1)
-        } else {
-          handleSetFocusedLinkIndex(+1)
-        }
-      } else if (event.key !== 'Enter') {
-        setFocusedButtonIndex(null)
       }
     }
 
@@ -209,37 +196,66 @@ const QuickCommand = () => {
     window.addEventListener('keyup', handleKeyUp)
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyDown)
+      window.removeEventListener('keydown', handleKeyUp)
     }
   }, [filteredLinks])
 
   useEffect(() => {
-    if (focusedButtonIndex !== null) {
-      if (oldFocusedButton) {
-        $(oldFocusedButton.element).removeClass(styles.focusedButton)
-      }
+    if (focusedButton) {
+      $(focusedButton.element).removeClass(styles.focusedButton)
+    }
 
-      const focusedButton = commonFilteredButtons[focusedButtonIndex]
+    const newFocusedButton = commonFilteredButtons[focusedButtonIndex]
 
-      if (focusedButton) {
-        $(focusedButton.element).addClass(styles.focusedButton)
-        oldFocusedButton = focusedButton
-      }
+    if (newFocusedButton) {
+      $(newFocusedButton.element).addClass(styles.focusedButton)
+      setFocusedButton(newFocusedButton)
+    } else if (commonFilteredButtons[0]) {
+      setFocusedButton(commonFilteredButtons[0])
     }
   }, [focusedButtonIndex, isVisible])
+
+  useEffect(() => {
+    if (focusedButton && focusedButton !== commonFilteredButtons[focusedButtonIndex]) {
+      setFocusedButtonIndex(commonFilteredButtons.findIndex(value => {
+        return value === focusedButton
+      }) || 0)
+    }
+  }, [commonFilteredButtons.length])
+
+  console.log({ focusedButton })
+
+  const focusedButtonRef = useRef<HTMLButtonElement | HTMLAnchorElement>(null)
 
   if (!isVisible) {
     return null
   }
 
-  const handleFocus = () => {
-    setFocusedButtonIndex(null)
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value)
   }
 
-  const handleInputChange = (value: string) => {
-    setInputValue(value)
-    setFocusedButtonIndex(null)
+  const handleInputKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      setVisible(false)
+      isCtrlPressed = false
+      keys = []
+    }
+
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault()
+
+      if (event.key === 'ArrowUp') {
+        handleSetFocusedLinkIndex(-1)
+      } else {
+        handleSetFocusedLinkIndex(+1)
+      }
+    } else if (event.key === 'Enter') {
+      if (focusedButtonRef.current) {
+        focusedButtonRef.current.click()
+      }
+    }
   }
 
   return (
@@ -249,15 +265,16 @@ const QuickCommand = () => {
     >
       <Input
         onChange={handleInputChange}
-        isFocused={focusedButtonIndex === null}
-        onFocus={handleFocus}
+        isFocused
         defaultValue={inputValue}
+        onKeyDown={handleInputKeyDown}
       />
       {commonFilteredButtons.length > 0 && (
         <div className={styles.result}>
           <Buttons
+            focusedButtonRef={focusedButtonRef}
             buttons={commonFilteredButtons}
-            focusedButtonIndex={focusedButtonIndex}
+            focusedButton={focusedButton}
           />
         </div>
       )}
