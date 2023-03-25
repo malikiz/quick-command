@@ -4,6 +4,7 @@ import Input from './Input/Input'
 import Links from './Links/Links'
 import { ILink } from './Links/Link'
 import $ from 'jquery'
+import stringSimilarity from 'string-similarity'
 
 const findLinks = (value: string): ILink[] => {
   const links: ILink[] = []
@@ -17,7 +18,7 @@ const findLinks = (value: string): ILink[] => {
     const text = $link.text()
     const href = $link.attr('href')
 
-    if (text.toLowerCase().includes(value.toLowerCase()) && href && !$link.parents('#quick-command').length) {
+    if (stringSimilarity.compareTwoStrings(value, text)  && href && !$link.parents('#quick-command').length) {
       links.push({
         url: href,
         text,
@@ -126,8 +127,6 @@ const QuickCommand = () => {
   const handleFocus = () => {
     setFocusedLinkIndex(null)
   }
-
-  console.log({ focusedLinkIndex })
 
   return (
     <div className={styles.quickCommand} id="quick-command">
