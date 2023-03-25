@@ -16,17 +16,30 @@ const buildManifest = () => {
     const manifestJson: typeof manifestOriginal = JSON.parse(data)
 
 
-    const files = fs.readdirSync(path.join(startPath, 'build/static/js'))
-
+    /* Set js files in manifest */
+    const jsFiles = fs.readdirSync(path.join(startPath, 'build/static/js'))
     manifestJson.content_scripts[0].js = []
-
-    files.forEach(file => {
+    jsFiles.forEach(file => {
       const filename = path.join(startPath, `build/static/js/${file}`)
       const stat = fs.statSync(filename)
 
       if (!stat.isDirectory()) {
         if (filename.endsWith('.js')) {
           manifestJson.content_scripts[0].js.push(filename.replace(/\\/g, '/').replace('build/', ''))
+        }
+      }
+    })
+
+    /* Set css files in manifest */
+    const cssFiles = fs.readdirSync(path.join(startPath, 'build/static/css'))
+    manifestJson.content_scripts[0].css = []
+    cssFiles.forEach(file => {
+      const filename = path.join(startPath, `build/static/css/${file}`)
+      const stat = fs.statSync(filename)
+
+      if (!stat.isDirectory()) {
+        if (filename.endsWith('.css')) {
+          manifestJson.content_scripts[0].css.push(filename.replace(/\\/g, '/').replace('build/', ''))
         }
       }
     })

@@ -79,6 +79,16 @@ const QuickCommand = () => {
   const [links, setLinks] = useState<ILink[]>([])
   const [focusedLinkIndex, setFocusedLinkIndex] = useState<number | null>(null)
 
+  const handleSetFocusedLinkIndex = (incrementValue: number) => {
+    const value = (focusedLinkIndex ?? -1) + incrementValue
+
+    if (value < 0) {
+      setFocusedLinkIndex(null)
+    } else {
+      setFocusedLinkIndex(Math.max(0, Math.min(value, links.length - 1)))
+    }
+  }
+
   useEffect(() => {
     keyboardController({
       onOpen: () => {
@@ -91,11 +101,11 @@ const QuickCommand = () => {
       },
       onSelect: (key) => {
         if (key === 'ArrowUp') {
-          setFocusedLinkIndex((focusedLinkIndex ?? -1) - 1)
+          handleSetFocusedLinkIndex(-1)
         }
 
         if (key === 'ArrowDown') {
-          setFocusedLinkIndex((focusedLinkIndex ?? -1) + 1)
+          handleSetFocusedLinkIndex(+1)
         }
       }
     })
@@ -113,9 +123,15 @@ const QuickCommand = () => {
     return null
   }
 
+  const handleFocus = () => {
+    setFocusedLinkIndex(null)
+  }
+
+  console.log({ focusedLinkIndex })
+
   return (
     <div className={styles.quickCommand} id="quick-command">
-      <Input onChange={setInputValue} />
+      <Input onChange={setInputValue} isFocused={focusedLinkIndex === null} onFocus={handleFocus} />
       {links.length > 0 && (
         <div className={styles.result}>
           <Links links={links} focusedLinkIndex={focusedLinkIndex} />

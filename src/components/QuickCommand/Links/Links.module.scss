@@ -1,0 +1,14 @@
+.links {
+  a {
+    display: block;
+    color: #4c87ff;
+    font-size: 14px;
+    padding: 4px;
+
+    &:focus {
+      background-color: rgba(0, 178, 255, 0.5);
+      color: #fff;
+      outline: none;
+    }
+  }
+}
