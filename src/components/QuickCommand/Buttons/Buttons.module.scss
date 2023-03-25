@@ -8,8 +8,10 @@
     padding: 4px;
     font-family: sans-serif;
     text-decoration: none;
+    cursor: pointer;
 
-    &:focus {
+    &:focus,
+    &:hover {
       background-color: rgba(0, 178, 255, 0.5);
       color: #fff;
       outline: none;

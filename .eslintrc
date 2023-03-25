@@ -2,7 +2,9 @@
   "extends": [
     "react-app",
     "eslint:recommended",
-    "plugin:react/recommended"
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
   "plugins": [
     "react"
@@ -107,6 +109,10 @@
         "prev": "*",
         "next": "return"
       }
-    ]
+    ],
+    "@typescript-eslint/no-namespace": ["error", { "allowDeclarations": true }]
+  },
+  "env": {
+    "jquery": true
   }
 }

@@ -10,12 +10,16 @@ import Buttons from './Buttons/Buttons'
 
 let oldFocusedButton: ILink
 
-const findAllLinks = (): ILink[] => {
+const getText = ($element: JQuery<HTMLElement>): string => {
+  return $element.text() || $element.attr('title') || $element.attr('aria-label') || $element.siblings().text() || $element.parent().text() || $element.parents().text() || ''
+}
+
+const findLinks = (): ILink[] => {
   const links: ILink[] = []
 
   $('a').each(function() {
     const $link = $(this)
-    const text = $link.text() || $link.attr('title') || $link.siblings().text() || $link.parent().text() || $link.parents().text() || ''
+    const text = getText($link)
     const href = $link.attr('href')
 
     if (href && !$link.parents('#quick-command').length) {
@@ -29,12 +33,13 @@ const findAllLinks = (): ILink[] => {
 
   return links
 }
-const findAllButtons = (): IButton[] => {
+
+const findButtons = (): IButton[] => {
   const buttons: IButton[] = []
 
   $('button, div[role="button"]').each(function() {
     const $button = $(this)
-    const text = $button.text() || $button.attr('title') || $button.siblings().text() || $button.parent().text() || $button.parents().text() || ''
+    const text = getText($button)
 
     if (!$button.parents('#quick-command').length) {
       buttons.push({
@@ -48,10 +53,6 @@ const findAllButtons = (): IButton[] => {
 }
 
 const filterAllButtons = <T extends { string?: string; text: string }>(links: T[], value: string): T[] => {
-  if (!value) {
-    return []
-  }
-
   return fuzzy.filter(value, links, {
     pre: '<b>',
     post: '</b>',
@@ -88,9 +89,9 @@ const QuickCommand = () => {
   }
 
   useEffect(() => {
-    setAllLinks(findAllLinks())
-    setAllButtons(findAllButtons())
-  }, [])
+    setAllLinks(findLinks())
+    setAllButtons(findButtons())
+  }, [inputValue])
 
   useEffect(() => {
     let isCtrlPressed = false
