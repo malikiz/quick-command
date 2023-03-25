@@ -8,7 +8,8 @@ interface IInputProps {
   defaultValue?: string
 }
 
-const Input: FC<IInputProps> = ({ onChange, isFocused, onFocus, defaultValue }) => {
+const Input: FC<IInputProps> = (props) => {
+  const { onChange, isFocused, onFocus, defaultValue } = props
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -16,12 +17,22 @@ const Input: FC<IInputProps> = ({ onChange, isFocused, onFocus, defaultValue }) 
       inputRef.current.focus()
     }
   }, [isFocused])
-
+  
   return (
     <div className={styles.input}>
-      <input type="text" onChange={(event) => {
-        onChange(event.target.value)
-      }} ref={inputRef} onFocus={onFocus} defaultValue={defaultValue} />
+      <input
+        type="text"
+        onChange={(event) => {
+          onChange(event.target.value)
+        }}
+        ref={inputRef}
+        onFocus={onFocus}
+        defaultValue={defaultValue}
+        onBlur={event => {
+          event.stopPropagation()
+          event.preventDefault()
+        }}
+      />
     </div>
   )
 }

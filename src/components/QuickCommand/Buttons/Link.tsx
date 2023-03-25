@@ -4,6 +4,7 @@ import HTMLReactParser from 'html-react-parser'
 export interface ILink {
   element: Element
   text: string
+  parentText?: string
   url: string
   string?: string
 }
@@ -16,7 +17,7 @@ export interface ILinkProps {
 const Link: FC<ILinkProps> = (props) => {
   const {
     link,
-    isFocused
+    isFocused,
   } = props
 
   const linkRef = useRef<HTMLAnchorElement>(null)
@@ -28,7 +29,10 @@ const Link: FC<ILinkProps> = (props) => {
   }, [isFocused])
 
   return (
-    <a href={link.url} ref={linkRef}>
+    <a
+      href={link.url}
+      ref={linkRef}
+    >
       {link.string ? HTMLReactParser(link.string) : link.text}
     </a>
   )

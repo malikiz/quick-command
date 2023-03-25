@@ -4,6 +4,7 @@ import HTMLReactParser from 'html-react-parser'
 export interface IButton {
   element: HTMLElement
   text: string
+  parentText?: string
   string?: string
 }
 
@@ -15,7 +16,7 @@ export interface IButtonProps {
 const Button: FC<IButtonProps> = (props) => {
   const {
     button,
-    isFocused
+    isFocused,
   } = props
 
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -31,7 +32,10 @@ const Button: FC<IButtonProps> = (props) => {
   }
 
   return (
-    <button ref={buttonRef} onClick={onClick}>
+    <button
+      ref={buttonRef}
+      onClick={onClick}
+    >
       {button.string ? HTMLReactParser(button.string) : button.text}
     </button>
   )

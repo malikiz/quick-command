@@ -38,6 +38,12 @@
         "SwitchCase": 1
       }
     ],
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 1
+      }
+    ],
     "comma-spacing": [
       "warn",
       {
@@ -101,6 +107,19 @@
         "logical": "parens-new-line",
         "prop": "parens-new-line"
       }
+    ],
+    "react/jsx-max-props-per-line": [
+      "error"
+    ],
+    "react/jsx-closing-bracket-location": [
+      "error"
+    ],
+    "react/self-closing-comp": ["error", {
+      "component": true,
+      "html": true
+    }],
+    "react/jsx-first-prop-new-line": [
+      "error"
     ],
     "padding-line-between-statements": [
       "error",

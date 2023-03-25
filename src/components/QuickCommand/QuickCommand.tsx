@@ -1,17 +1,30 @@
 import React, { useEffect, useState } from 'react'
 import styles from './QuickCommand.module.scss'
 import Input from './Input/Input'
-import Links from './Links/Links'
-import { ILink } from './Links/Link'
+import { ILink } from './Buttons/Link'
 import $ from 'jquery'
 import fuzzy from 'fuzzy'
 import { IButton } from './Buttons/Button'
 import Buttons from './Buttons/Buttons'
 
-let oldFocusedButton: ILink
+let oldFocusedButton: ILink | IButton
 
-const getText = ($element: JQuery<HTMLElement>): string => {
-  return $element.text() || $element.attr('title') || $element.attr('aria-label') || $element.siblings().text() || $element.parent().text() || $element.parents().text() || ''
+const sliceText = (text: string, maxLength: number): string => {
+  return text.length > maxLength ? text.slice(0, maxLength) + '...' : text
+}
+
+const getText = ($element: JQuery): {
+  text: string
+  parentText: string
+} => {
+  const maxLength = 100
+  const text = $element.text() || $element.attr('title') || $element.attr('aria-label')
+  const parentText = $element.siblings().text() || $element.parent().text() || $element.parent().parent().text()
+
+  return {
+    text: sliceText(text ?? '', maxLength),
+    parentText: sliceText(parentText ?? '', maxLength),
+  }
 }
 
 const findLinks = (): ILink[] => {
@@ -19,7 +32,7 @@ const findLinks = (): ILink[] => {
 
   $('a').each(function() {
     const $link = $(this)
-    const text = getText($link)
+    const { text, parentText } = getText($link)
     const href = $link.attr('href')
 
     if (href && !$link.parents('#quick-command').length) {
@@ -27,6 +40,7 @@ const findLinks = (): ILink[] => {
         element: $link[0],
         url: href,
         text,
+        parentText,
       })
     }
   })
@@ -39,12 +53,13 @@ const findButtons = (): IButton[] => {
 
   $('button, div[role="button"]').each(function() {
     const $button = $(this)
-    const text = getText($button)
+    const { text, parentText } = getText($button)
 
     if (!$button.parents('#quick-command').length) {
       buttons.push({
         element: $button[0],
         text,
+        parentText,
       })
     }
   })
@@ -52,8 +67,35 @@ const findButtons = (): IButton[] => {
   return buttons
 }
 
-const filterAllButtons = <T extends { string?: string; text: string }>(links: T[], value: string): T[] => {
-  return fuzzy.filter(value, links, {
+const filterAllButtons = <T extends ILink | IButton>(list: T[], value: string): T[] => {
+  const filteredLinks = list.filter(item => {
+    if ((item as ILink).url) {
+      const link = item as ILink
+
+      if (!link.text) {
+        const hasSameUrlWithText = list.some(jItem => {
+          if ((jItem as ILink).url) {
+            const jLink = jItem as ILink
+
+            return Boolean(jLink.text) && link.url === jLink.url
+          }
+
+          return false
+        })
+
+        return !hasSameUrlWithText
+      }
+    }
+
+    return true
+  }).map(item => {
+    return {
+      ...item,
+      text: (item.text || item.parentText)?.trim() || (item as ILink).url || '',
+    }
+  })
+
+  return fuzzy.filter(value, filteredLinks, {
     pre: '<b>',
     post: '</b>',
     extract(input: T): string {
@@ -73,9 +115,10 @@ const QuickCommand = () => {
   const [allButtons, setAllButtons] = useState<IButton[]>([])
   const [allLinks, setAllLinks] = useState<ILink[]>([])
   const [focusedButtonIndex, setFocusedButtonIndex] = useState<number | null>(null)
+  const [observerTick, setObserverTick] = useState(0)
   const filteredLinks = filterAllButtons(allLinks, inputValue)
   const filteredButtons = filterAllButtons(allButtons, inputValue)
-  const commonLength = filteredLinks.length + filteredButtons.length
+  const commonFilteredButtons = [...filteredLinks, ...filteredButtons]
 
   const handleSetFocusedLinkIndex = (incrementValue: number) => {
     const value = (focusedButtonIndex ?? -1) + incrementValue
@@ -83,32 +126,52 @@ const QuickCommand = () => {
     if (value < 0) {
       setFocusedButtonIndex(null)
     } else {
-      const newValue = Math.max(0, Math.min(value, commonLength - 1))
+      const newValue = Math.max(0, Math.min(value, commonFilteredButtons.length - 1))
       setFocusedButtonIndex(newValue)
     }
   }
 
   useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      const isMutable = !mutations.some(mutation => {
+        if (mutation.target) {
+          return $(mutation.target).attr('id') === 'root-quick-command' || $(mutation.target).parents('#root-quick-command').length > 0
+        }
+
+        return false
+      })
+
+      if (isMutable) {
+        setObserverTick(observerTick + 1)
+      }
+    })
+
+    observer.observe(document.body, { childList:true, subtree:true })
+  })
+
+  useEffect(() => {
     setAllLinks(findLinks())
     setAllButtons(findButtons())
-  }, [inputValue])
+  }, [observerTick])
 
   useEffect(() => {
     let isCtrlPressed = false
     let keys: string[] = []
     const seq = 'Shift,Shift'
-    let lastEntry = 0
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Control') {
         isCtrlPressed = true
       }
 
-      if (!isVisible) return
+      if (!isVisible) {
+        return
+      }
       if (event.key === 'Escape') {
         event.preventDefault()
         setVisible(false)
         isCtrlPressed = false
+        keys = []
       }
 
       if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
@@ -127,6 +190,7 @@ const QuickCommand = () => {
     const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key === 'Control') {
         isCtrlPressed = false
+        keys = []
 
         return
       }
@@ -134,18 +198,15 @@ const QuickCommand = () => {
       keys.push(event.key)
 
       if (keys.toString().indexOf(seq) !== -1 && isCtrlPressed) {
-        if (event.timeStamp - lastEntry <= 300) {
+        if (event.timeStamp && isCtrlPressed) {
           setVisible(true)
           keys = []
         }
       }
-      // Update time of last keydown
-      lastEntry = event.timeStamp
     }
 
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
-
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
@@ -159,13 +220,14 @@ const QuickCommand = () => {
         $(oldFocusedButton.element).removeClass(styles.focusedButton)
       }
 
-      const focusedButton = filteredLinks[focusedButtonIndex] ?? filteredButtons[focusedButtonIndex - filteredLinks.length]
+      const focusedButton = commonFilteredButtons[focusedButtonIndex]
 
-      $(focusedButton.element).addClass(styles.focusedButton)
-      oldFocusedButton = focusedButton
+      if (focusedButton) {
+        $(focusedButton.element).addClass(styles.focusedButton)
+        oldFocusedButton = focusedButton
+      }
     }
   }, [focusedButtonIndex, isVisible])
-
 
   if (!isVisible) {
     return null
@@ -175,14 +237,28 @@ const QuickCommand = () => {
     setFocusedButtonIndex(null)
   }
 
+  const handleInputChange = (value: string) => {
+    setInputValue(value)
+    setFocusedButtonIndex(null)
+  }
 
   return (
-    <div className={styles.quickCommand} id="quick-command">
-      <Input onChange={setInputValue} isFocused={focusedButtonIndex === null} onFocus={handleFocus} defaultValue={inputValue} />
-      {(filteredLinks.length > 0 || filteredButtons.length > 0) && (
+    <div
+      className={styles.quickCommand}
+      id="quick-command"
+    >
+      <Input
+        onChange={handleInputChange}
+        isFocused={focusedButtonIndex === null}
+        onFocus={handleFocus}
+        defaultValue={inputValue}
+      />
+      {commonFilteredButtons.length > 0 && (
         <div className={styles.result}>
-          <Links before={0} links={filteredLinks} focusedLinkIndex={focusedButtonIndex} />
-          <Buttons before={filteredLinks.length} buttons={filteredButtons} focusedButtonIndex={focusedButtonIndex} />
+          <Buttons
+            buttons={commonFilteredButtons}
+            focusedButtonIndex={focusedButtonIndex}
+          />
         </div>
       )}
     </div>

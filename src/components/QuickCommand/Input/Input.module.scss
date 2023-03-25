@@ -1,13 +1,13 @@
 .input {
   input {
-    width: 100%;
-    height: 24px;
-    background-color: #393939;
-    color: #fff;
-    
+    width: 100% !important;
+    height: 24px !important;
+    background-color: #393939 !important;
+    color: #fff !important;
+
     &:focus {
-      background-color: #444;
-      outline: none;
+      background-color: #444 !important;
+      outline: none !important;
     }
   }
 }
