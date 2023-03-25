@@ -4,13 +4,13 @@ import styles from './Input.module.scss'
 interface IInputProps {
   onChange: (event: ChangeEvent<HTMLInputElement>) => void
   isFocused: boolean
-  onFocus?: () => void
+  onBlur: () => void
   defaultValue?: string
   onKeyDown: KeyboardEventHandler<HTMLInputElement>
 }
 
 const Input: FC<IInputProps> = (props) => {
-  const { onChange, isFocused, onFocus, defaultValue, onKeyDown } = props
+  const { onChange, isFocused, defaultValue, onKeyDown, onBlur } = props
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -26,11 +26,11 @@ const Input: FC<IInputProps> = (props) => {
         onChange={onChange}
         onKeyDown={onKeyDown}
         ref={inputRef}
-        onFocus={onFocus}
         defaultValue={defaultValue}
         onBlur={event => {
           event.stopPropagation()
           event.preventDefault()
+          onBlur()
         }}
       />
     </div>

@@ -178,14 +178,13 @@ const QuickCommand = () => {
       if (event.key === 'Control') {
         isCtrlPressed = false
         keys = []
-
-        return
       }
 
-      keys.push(event.key)
+      console.log(event.key)
+      if (isCtrlPressed) {
+        keys.push(event.key)
 
-      if (keys.toString().indexOf(seq) !== -1 && isCtrlPressed) {
-        if (event.timeStamp && isCtrlPressed) {
+        if (keys.toString().indexOf(seq) !== -1) {
           setVisible(true)
           keys = []
         }
@@ -197,8 +196,9 @@ const QuickCommand = () => {
 
     return () => {
       window.removeEventListener('keydown', handleKeyUp)
+      window.addEventListener('keydown', handleKeyDown)
     }
-  }, [filteredLinks])
+  }, [])
 
   useEffect(() => {
     if (focusedButton) {
@@ -256,6 +256,10 @@ const QuickCommand = () => {
     }
   }
 
+  const handleInputBlur = () => {
+    setVisible(false)
+  }
+
   return (
     <div
       className={styles.quickCommand}
@@ -266,6 +270,7 @@ const QuickCommand = () => {
         isFocused
         defaultValue={inputValue}
         onKeyDown={handleInputKeyDown}
+        onBlur={handleInputBlur}
       />
       {commonFilteredButtons.length > 0 && (
         <div className={styles.result}>
