@@ -5,15 +5,17 @@ import Links from './Links/Links'
 import { ILink } from './Links/Link'
 import $ from 'jquery'
 import fuzzy from 'fuzzy'
+import { IButton } from './Buttons/Button'
+import Buttons from './Buttons/Buttons'
 
-let oldFocusedLink: ILink
+let oldFocusedButton: ILink
 
 const findAllLinks = (): ILink[] => {
   const links: ILink[] = []
 
   $('a').each(function() {
     const $link = $(this)
-    const text = $link.text()
+    const text = $link.text() || $link.attr('title') || $link.siblings().text() || $link.parent().text() || $link.parents().text() || ''
     const href = $link.attr('href')
 
     if (href && !$link.parents('#quick-command').length) {
@@ -27,8 +29,25 @@ const findAllLinks = (): ILink[] => {
 
   return links
 }
+const findAllButtons = (): IButton[] => {
+  const buttons: IButton[] = []
 
-const filterAllLinks = (links: ILink[], value: string): ILink[] => {
+  $('button').each(function() {
+    const $button = $(this)
+    const text = $button.text() || $button.attr('title') || $button.siblings().text() || $button.parent().text() || $button.parents().text() || ''
+
+    if (!$button.parents('#quick-command').length) {
+      buttons.push({
+        element: $button[0],
+        text,
+      })
+    }
+  })
+
+  return buttons
+}
+
+const filterAllButtons = <T extends { string?: string; text: string }>(links: T[], value: string): T[] => {
   if (!value) {
     return []
   }
@@ -36,7 +55,7 @@ const filterAllLinks = (links: ILink[], value: string): ILink[] => {
   return fuzzy.filter(value, links, {
     pre: '<b>',
     post: '</b>',
-    extract(input: ILink): string {
+    extract(input: T): string {
       return input.text
     }
   }).map(item => {
@@ -50,23 +69,27 @@ const filterAllLinks = (links: ILink[], value: string): ILink[] => {
 const QuickCommand = () => {
   const [isVisible, setVisible] = useState(false)
   const [inputValue, setInputValue] = useState('')
+  const [allButtons, setAllButtons] = useState<IButton[]>([])
   const [allLinks, setAllLinks] = useState<ILink[]>([])
-  const [focusedLinkIndex, setFocusedLinkIndex] = useState<number | null>(null)
-  const filteredLinks = filterAllLinks(allLinks, inputValue)
+  const [focusedButtonIndex, setFocusedButtonIndex] = useState<number | null>(null)
+  const filteredLinks = filterAllButtons(allLinks, inputValue)
+  const filteredButtons = filterAllButtons(allButtons, inputValue)
+  const commonLength = filteredLinks.length + filteredButtons.length
 
   const handleSetFocusedLinkIndex = (incrementValue: number) => {
-    const value = (focusedLinkIndex ?? -1) + incrementValue
+    const value = (focusedButtonIndex ?? -1) + incrementValue
 
     if (value < 0) {
-      setFocusedLinkIndex(null)
+      setFocusedButtonIndex(null)
     } else {
-      const newValue = Math.max(0, Math.min(value, filteredLinks.length - 1))
-      setFocusedLinkIndex(newValue)
+      const newValue = Math.max(0, Math.min(value, commonLength - 1))
+      setFocusedButtonIndex(newValue)
     }
   }
 
   useEffect(() => {
     setAllLinks(findAllLinks())
+    setAllButtons(findAllButtons())
   }, [])
 
   useEffect(() => {
@@ -96,7 +119,7 @@ const QuickCommand = () => {
           handleSetFocusedLinkIndex(+1)
         }
       } else if (event.key !== 'Enter') {
-        setFocusedLinkIndex(null)
+        setFocusedButtonIndex(null)
       }
     }
 
@@ -130,17 +153,17 @@ const QuickCommand = () => {
   }, [filteredLinks])
 
   useEffect(() => {
-    if (focusedLinkIndex !== null) {
-      if (oldFocusedLink) {
-        $(oldFocusedLink.element).removeClass(styles.focusedLink)
+    if (focusedButtonIndex !== null) {
+      if (oldFocusedButton) {
+        $(oldFocusedButton.element).removeClass(styles.focusedButton)
       }
 
-      const focusedLink = filteredLinks[focusedLinkIndex]
+      const focusedButton = filteredLinks[focusedButtonIndex] ?? filteredButtons[focusedButtonIndex - filteredLinks.length]
 
-      $(focusedLink.element).addClass(styles.focusedLink)
-      oldFocusedLink = focusedLink
+      $(focusedButton.element).addClass(styles.focusedButton)
+      oldFocusedButton = focusedButton
     }
-  }, [focusedLinkIndex, isVisible])
+  }, [focusedButtonIndex, isVisible])
 
 
   if (!isVisible) {
@@ -148,16 +171,17 @@ const QuickCommand = () => {
   }
 
   const handleFocus = () => {
-    setFocusedLinkIndex(null)
+    setFocusedButtonIndex(null)
   }
 
 
   return (
     <div className={styles.quickCommand} id="quick-command">
-      <Input onChange={setInputValue} isFocused={focusedLinkIndex === null} onFocus={handleFocus} defaultValue={inputValue} />
-      {filteredLinks.length > 0 && (
+      <Input onChange={setInputValue} isFocused={focusedButtonIndex === null} onFocus={handleFocus} defaultValue={inputValue} />
+      {(filteredLinks.length > 0 || filteredButtons.length > 0) && (
         <div className={styles.result}>
-          <Links links={filteredLinks} focusedLinkIndex={focusedLinkIndex} />
+          <Links before={0} links={filteredLinks} focusedLinkIndex={focusedButtonIndex} />
+          <Buttons before={filteredLinks.length} buttons={filteredButtons} focusedButtonIndex={focusedButtonIndex} />
         </div>
       )}
     </div>
