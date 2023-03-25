@@ -20,7 +20,20 @@ const getText = ($element: JQuery): {
 } => {
   const maxLength = 100
   const text = $element.text() || $element.attr('title') || $element.attr('aria-label')
-  const parentText = $element.siblings().text() || $element.parent().text() || $element.parent().parent().text()
+  const parentText =
+    $element
+      .find('[aria-label]')
+      .not('a')
+      .not('button')
+      .eq(0)
+      .attr('aria-label') ||
+    $element
+      .find('[title]')
+      .not('a')
+      .not('button')
+      .eq(0)
+      .attr('title') ||
+    $element.siblings().text() || $element.parent().text() || $element.parent().parent().text()
 
   return {
     text: sliceText(text ?? '', maxLength),
@@ -195,8 +208,8 @@ const QuickCommand = () => {
     window.addEventListener('keyup', handleKeyUp)
 
     return () => {
-      window.removeEventListener('keydown', handleKeyUp)
       window.addEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
     }
   }, [])
 
