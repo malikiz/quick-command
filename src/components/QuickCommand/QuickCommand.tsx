@@ -193,7 +193,6 @@ const QuickCommand = () => {
         keys = []
       }
 
-      console.log(event.key)
       if (isCtrlPressed) {
         keys.push(event.key)
 
@@ -233,8 +232,6 @@ const QuickCommand = () => {
       }) || 0)
     }
   }, [commonFilteredButtons.length])
-
-  console.log({ focusedButton })
 
   const focusedButtonRef = useRef<HTMLButtonElement | HTMLAnchorElement>(null)
 
