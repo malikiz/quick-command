@@ -205,13 +205,11 @@ const QuickCommand = () => {
       $(focusedButton.element).removeClass(styles.focusedButton)
     }
 
-    const newFocusedButton = commonFilteredButtons[focusedButtonIndex]
+    const newFocusedButton = commonFilteredButtons[focusedButtonIndex] ?? commonFilteredButtons[0]
 
     if (newFocusedButton) {
       $(newFocusedButton.element).addClass(styles.focusedButton)
       setFocusedButton(newFocusedButton)
-    } else if (commonFilteredButtons[0]) {
-      setFocusedButton(commonFilteredButtons[0])
     }
   }, [focusedButtonIndex, isVisible])
 
