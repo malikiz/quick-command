@@ -80,7 +80,9 @@ const QuickCommand = () => {
         isCtrlPressed = true
       }
 
+      if (!isVisible) return
       if (event.key === 'Escape') {
+        event.preventDefault()
         setVisible(false)
         isCtrlPressed = false
       }
@@ -138,7 +140,7 @@ const QuickCommand = () => {
       $(focusedLink.element).addClass(styles.focusedLink)
       oldFocusedLink = focusedLink
     }
-  }, [focusedLinkIndex])
+  }, [focusedLinkIndex, isVisible])
 
 
   if (!isVisible) {
