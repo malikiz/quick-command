@@ -49,7 +49,6 @@ const QuickCommand = () => {
   const [inputValue, setInputValue] = useState('')
   const [allLinks, setAllLinks] = useState<ILink[]>([])
   const [focusedLinkIndex, setFocusedLinkIndex] = useState<number | null>(null)
-  const [isCtrlPressed, setIsCtrlPressed] = useState(false)
   const filteredLinks = filterAllLinks(allLinks, inputValue)
 
   const handleSetFocusedLinkIndex = (incrementValue: number) => {
@@ -68,17 +67,19 @@ const QuickCommand = () => {
   }, [])
 
   useEffect(() => {
+    let isCtrlPressed = false
     let keys: string[] = []
     const seq = 'Shift,Shift'
     let lastEntry = 0
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Control') {
-        setIsCtrlPressed(true)
+        isCtrlPressed = true
       }
 
       if (event.key === 'Escape') {
         setVisible(false)
+        isCtrlPressed = false
       }
 
       if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
@@ -96,7 +97,7 @@ const QuickCommand = () => {
 
     const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key === 'Control') {
-        setIsCtrlPressed(false)
+        isCtrlPressed = false
 
         return
       }
@@ -116,11 +117,12 @@ const QuickCommand = () => {
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
 
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyDown)
     }
-  }, [isCtrlPressed, filteredLinks])
+  }, [filteredLinks])
 
 
   if (!isVisible) {
