@@ -32,7 +32,7 @@ const findAllLinks = (): ILink[] => {
 const findAllButtons = (): IButton[] => {
   const buttons: IButton[] = []
 
-  $('button').each(function() {
+  $('button, div[role="button"]').each(function() {
     const $button = $(this)
     const text = $button.text() || $button.attr('title') || $button.siblings().text() || $button.parent().text() || $button.parents().text() || ''
 
