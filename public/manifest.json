@@ -11,12 +11,22 @@
     "https://*/*"
   ],
   "browser_action": {
-    "default_popup": "extension/build/index.html",
+    "default_popup": "index.html",
     "default_icon": {
-      "16": "/public/favicon.ico"
+      "16": "/favicon.ico"
     }
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*/*"
+      ],
+      "js": [
+        "static/js/main.f330226a.js"
+      ]
+    }
+  ],
   "icons": {
-    "16": "/public/favicon.ico"
+    "16": "/favicon.ico"
   }
 }

@@ -2,6 +2,10 @@
   "name": "my-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "compilerOptions": {
+    "esModuleInterop": true
+  },
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -11,6 +15,7 @@
     "@types/node": "^16.18.19",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
+    "jquery": "^3.6.4",
     "mv": "^2.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -24,7 +29,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "move": "yarn build && rimraf ../static && mv build/static ../static"
+    "build-extension": "yarn build && ts-node src/core/build.ts"
   },
   "eslintConfig": {
     "extends": [
