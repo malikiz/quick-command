@@ -2,6 +2,7 @@ import React, { FC, useEffect, useRef } from 'react'
 import HTMLReactParser from 'html-react-parser'
 
 export interface ILink {
+  element: Element
   text: string
   url: string
   string?: string

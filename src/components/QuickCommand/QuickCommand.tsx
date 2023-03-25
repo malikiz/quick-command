@@ -6,6 +6,8 @@ import { ILink } from './Links/Link'
 import $ from 'jquery'
 import fuzzy from 'fuzzy'
 
+let oldFocusedLink: ILink
+
 const findAllLinks = (): ILink[] => {
   const links: ILink[] = []
 
@@ -16,6 +18,7 @@ const findAllLinks = (): ILink[] => {
 
     if (href && !$link.parents('#quick-command').length) {
       links.push({
+        element: $link[0],
         url: href,
         text,
       })
@@ -90,7 +93,7 @@ const QuickCommand = () => {
         } else {
           handleSetFocusedLinkIndex(+1)
         }
-      } else {
+      } else if (event.key !== 'Enter') {
         setFocusedLinkIndex(null)
       }
     }
@@ -123,6 +126,19 @@ const QuickCommand = () => {
       window.removeEventListener('keyup', handleKeyDown)
     }
   }, [filteredLinks])
+
+  useEffect(() => {
+    if (focusedLinkIndex !== null) {
+      if (oldFocusedLink) {
+        $(oldFocusedLink.element).removeClass(styles.focusedLink)
+      }
+
+      const focusedLink = filteredLinks[focusedLinkIndex]
+
+      $(focusedLink.element).addClass(styles.focusedLink)
+      oldFocusedLink = focusedLink
+    }
+  }, [focusedLinkIndex])
 
 
   if (!isVisible) {
