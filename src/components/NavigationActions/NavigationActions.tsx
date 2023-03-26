@@ -23,6 +23,7 @@ const NavigationActions: FC<INavigationActionsProps> = (props) => {
   const [focusedButtonIndex, setFocusedButtonIndex] = useState<number>(0)
   const [focusedButton, setFocusedButton] = useState<IButton | null>(null)
   const [isLoading, setLoading] = useState(false)
+  const [direction, setDirection] = useState<'up' | 'down'>('up')
   const observerTick = useObserver()
 
   const filteredLinks = filterAllButtons(allLinks, inputValue)
@@ -56,6 +57,12 @@ const NavigationActions: FC<INavigationActionsProps> = (props) => {
 
     if (newFocusedButton) {
       $(newFocusedButton.element).addClass(styles.focusedButton)
+
+      const scrollTop = ($(newFocusedButton.element).offset()?.top ?? 0) - ($('#quick-command').outerHeight(true) ?? 0) - 100
+
+      $(document.documentElement).stop(true).animate({
+        scrollTop: scrollTop
+      }, 100)
       setFocusedButton(newFocusedButton)
     }
   }, [focusedButtonIndex, commonFilteredButtons])
@@ -85,8 +92,10 @@ const NavigationActions: FC<INavigationActionsProps> = (props) => {
 
       if (event.key === 'ArrowUp') {
         handleSetFocusedLinkIndex(-1)
+        setDirection('up')
       } else {
         handleSetFocusedLinkIndex(+1)
+        setDirection('down')
       }
     } else if (event.key === 'Enter') {
       if (focusedButtonRef.current) {
@@ -96,7 +105,7 @@ const NavigationActions: FC<INavigationActionsProps> = (props) => {
   }
 
   const handleInputBlur = () => {
-    setVisible(false)
+    // setVisible(false)
   }
 
   return (
@@ -119,6 +128,7 @@ const NavigationActions: FC<INavigationActionsProps> = (props) => {
                 focusedButtonRef={focusedButtonRef}
                 buttons={commonFilteredButtons}
                 focusedButton={focusedButton}
+                direction={direction}
               />
             </div>
           )
