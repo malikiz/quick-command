@@ -20,14 +20,17 @@ function scrollToItem(targetElem: JQuery, direction: 'up' | 'down') {
   const targetElemBottom = targetElemTop + (targetElem.outerHeight() ?? 0)
   const windowHeight = scrollAbleElement.height() ?? 0
 
-  const isAbove = targetElemTop < scrollTop
-  const isBelow = targetElemBottom > scrollTop + windowHeight
+  const targetElementHeight = targetElem.innerHeight() ?? 0
+  const reserve = 2
+
+  const isAbove = targetElemTop < scrollTop + targetElementHeight * reserve
+  const isBelow = targetElemBottom > scrollTop + windowHeight - targetElementHeight * reserve
   const goesUp = direction === 'up'
 
   if (isAbove || isBelow) {
-    const goto = goesUp ? targetElemTop : targetElemTop - windowHeight + targetElem.innerHeight()!
+    const goto = goesUp ? targetElemTop - targetElementHeight * reserve : targetElemTop - windowHeight + (targetElementHeight * (reserve + 1))
 
-    scrollAbleElement.stop(true).animate({ scrollTop: goto }, 10)
+    scrollAbleElement.stop(true).animate({ scrollTop: goto }, 100)
   }
 }
 
@@ -35,11 +38,11 @@ const Buttons: FC<IButtonsProps> = (props) => {
   const { buttons, focusedButton, focusedButtonRef, direction } = props
 
   useEffect(() => {
-    if (focusedButtonRef.current) {
-      setTimeout(() => {
-        scrollToItem($(focusedButtonRef.current!), direction)
-      }, 0)
-    }
+    setTimeout(() => {
+      if (focusedButtonRef.current) {
+        scrollToItem($(focusedButtonRef.current), direction)
+      }
+    }, 0)
   }, [focusedButtonRef.current, direction])
 
   return (
