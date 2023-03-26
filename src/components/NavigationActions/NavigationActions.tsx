@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FC, KeyboardEventHandler, useEffect, useRef, useState } from 'react'
+import React, { ChangeEvent, FC, KeyboardEventHandler, RefObject, useEffect, useRef, useState } from 'react'
 import styles from './NavigationActions.module.scss'
 import Input from './Input/Input'
 import $ from 'jquery'
@@ -12,10 +12,11 @@ import useObserver from './hooks/useObserver'
 interface INavigationActionsProps {
   setVisible: (value: boolean) => void;
   isVisible: boolean
+  inputRef: RefObject<HTMLInputElement>
 }
 
 const NavigationActions: FC<INavigationActionsProps> = (props) => {
-  const { setVisible } = props
+  const { setVisible, inputRef } = props
   
   const [inputValue, setInputValue] = useState('')
   const [allButtons, setAllButtons] = useState<IButton[]>([])
@@ -109,7 +110,9 @@ const NavigationActions: FC<INavigationActionsProps> = (props) => {
   }
 
   const handleInputBlur = () => {
-    // setVisible(false)
+    // setTimeout(() => {
+    //   setVisible(false)
+    // }, 100)
   }
 
   return (
@@ -119,10 +122,10 @@ const NavigationActions: FC<INavigationActionsProps> = (props) => {
     >
       <Input
         onChange={handleInputChange}
-        isFocused
         defaultValue={inputValue}
         onKeyDown={handleInputKeyDown}
         onBlur={handleInputBlur}
+        inputRef={inputRef}
       />
       <>
         {isLoading ? 'Loading...' : (
