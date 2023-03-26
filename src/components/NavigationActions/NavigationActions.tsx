@@ -37,6 +37,7 @@ const NavigationActions: FC<INavigationActionsProps> = (props) => {
       setFocusedButtonIndex(0)
     } else {
       const newValue = Math.max(0, Math.min(value, commonFilteredButtons.length - 1))
+
       setFocusedButtonIndex(newValue)
     }
   }
@@ -63,15 +64,18 @@ const NavigationActions: FC<INavigationActionsProps> = (props) => {
       $(document.documentElement).stop(true).animate({
         scrollTop: scrollTop
       }, 100)
+
       setFocusedButton(newFocusedButton)
     }
   }, [focusedButtonIndex, commonFilteredButtons])
 
   useEffect(() => {
     if (focusedButton && focusedButton !== commonFilteredButtons[focusedButtonIndex]) {
-      setFocusedButtonIndex(commonFilteredButtons.findIndex(value => {
+      const newFocusedButtonIndex = commonFilteredButtons.findIndex(value => {
         return value === focusedButton
-      }) || 0)
+      }) ?? 0
+
+      setFocusedButtonIndex(Math.max(0, newFocusedButtonIndex))
     }
   }, [commonFilteredButtons.length])
 
