@@ -3,6 +3,10 @@
 # Quick Command - Chrome extension
 The extension that allows you to navigate any page. The extension allows you to find the button or link you need using keyboard input.
 
+### Preview
+![image](https://github.com/maLikiz/quick-command/blob/dev/preview.gif?raw=true)
+
+
 ### How to use in Chrome browser:
 - To call Quick Command popup hold `Control` key and then press `Shift` key twice quickly.
 - Input your link name or button name to quick command
