@@ -1,3 +1,5 @@
+![image](https://user-images.githubusercontent.com/4878139/229270658-c3b80761-b058-45f5-bf38-51bed288ef74.png)
+
 # Quick Command - Chrome extension
 The extension that allows you to navigate any page. The extension allows you to find the button or link you need using keyboard input.
 
