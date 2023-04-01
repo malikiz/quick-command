@@ -7,14 +7,10 @@
     "storage",
     "tabs",
     "activeTab",
-    "chrome://*/*",
     "http://*/*",
     "https://*/*"
   ],
   "browser_action": {
-    "default_icon": {
-      "16": "/favicon.ico"
-    }
   },
   "content_scripts": [
     {
@@ -30,6 +26,7 @@
     }
   ],
   "icons": {
-    "16": "/favicon.ico"
+    "16": "/qc-16.png",
+    "96": "/qc-96.png"
   }
 }

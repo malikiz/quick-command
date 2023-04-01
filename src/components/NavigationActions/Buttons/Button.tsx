@@ -1,4 +1,4 @@
-import React, { FC, RefObject } from 'react'
+import React, { FC, MouseEventHandler, RefObject } from 'react'
 import HTMLReactParser from 'html-react-parser'
 import classNames from 'classnames'
 import styles from './Buttons.module.scss'
@@ -24,7 +24,9 @@ const Button: FC<IButtonProps> = (props) => {
     isFocused,
   } = props
 
-  const onClick = () => {
+  const onClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
     button.element.click()
   }
 

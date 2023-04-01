@@ -78,7 +78,9 @@
     "import/first": "off",
     "no-extend-native": "off",
     "curly": "warn",
-    "no-console": "error",
+    "no-console": [
+      "error", { "allow": ["warn", "error", "info"] }
+    ],
     "no-unused-vars": [
       "error"
     ],

@@ -5,7 +5,7 @@ import path from 'path'
 const startPath = './'
 
 const buildManifest = () => {
-  console.info('buildManifest STARTED')
+  console.info('manifest.json building')
   const manifestPath = path.join(startPath, 'build/manifest.json')
 
   fs.readFile(manifestPath, 'utf8', (error, data) => {
@@ -14,7 +14,6 @@ const buildManifest = () => {
     }
 
     const manifestJson: typeof manifestOriginal = JSON.parse(data)
-
 
     /* Set js files in manifest */
     const jsFiles = fs.readdirSync(path.join(startPath, 'build/static/js'))
@@ -46,7 +45,7 @@ const buildManifest = () => {
 
     fs.writeFileSync(manifestPath, JSON.stringify(manifestJson, null, '\t'))
 
-    console.info('buildManifest FINISHED')
+    console.info('manifest.json building was successful')
   })
 }
 
