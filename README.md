@@ -10,7 +10,7 @@ The extension that allows you to navigate any page. The extension allows you to 
 ### How to use in Chrome browser:
 - To call Quick Command popup hold `Control` key and then press `Shift` key twice quickly.
 - Input your link name or button name to quick command
-- Use arrows on your keyboard to 
+- Use arrows on your keyboard to choice your action
 
 ### Building extension:
 For build extension run in bash:
